@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+    TestNG XML Configuration for Parallel Execution
+
+    Usage:
+    - Sequential: mvn test
+    - Parallel (methods): mvn test -DsuiteXmlFile=src/test/resources/testng-parallel.xml
+    - Parallel (tests): mvn test -DsuiteXmlFile=src/test/resources/testng-parallel-tests.xml
+-->
+
+<!-- Parallel by methods - each test method runs in separate thread -->
+<suite name="Parallel Tests - By Methods" parallel="methods" thread-count="3">
+
+    <listeners>
+        <!-- Optional: Add custom listeners for reporting -->
+        <!-- <listener class-name="com.periplus.listeners.TestListener"/> -->
+    </listeners>
+
+    <test name="Shopping Cart Tests" preserve-order="false">
+        <classes>
+            <class name="com.periplus.tests.ShoppingCartTest"/>
+        </classes>
+    </test>
+
+</suite>
