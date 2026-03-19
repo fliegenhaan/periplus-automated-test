@@ -1,4 +1,4 @@
-# Test Documentation - Periplus Shopping Cart
+# Test Documentation - Periplus Shopping Cart Automated Test
 
 ## Overview
 This document outlines the test cases for verifying the shopping cart functionality of the Periplus online bookstore website (https://www.periplus.com/).
