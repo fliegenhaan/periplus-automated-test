@@ -45,4 +45,11 @@ public class HomePage extends BasePage {
         driver.navigate().to(baseUrl + "checkout/cart");
         return new CartPage(driver);
     }
+
+    public HomePage logout() {
+        hover(loginButton);
+        click(logoutButton);
+        logger.info("User logged out successfully");
+        return this;
+    }
 }

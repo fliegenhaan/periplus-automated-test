@@ -2,6 +2,7 @@ package com.periplus.tests;
 
 import com.periplus.base.BaseTest;
 import com.periplus.pages.CartPage;
+import com.periplus.pages.LoginPage;
 import com.periplus.pages.ProductPage;
 import com.periplus.pages.ProductsPage;
 import utilities.ConfigManager;
@@ -265,5 +266,50 @@ public class ShoppingCartTest extends BaseTest {
         Assert.assertEquals(cartPage.getCartTotal(), expectedNewTotal, 0.01, "Cart total should reflect decreased quantity");
 
         logger.info("Quantity decrease test completed successfully");
+    }
+
+    @Test
+    public void testCartPersistenceBetweenSessions() {
+        logger.info("Starting test: Cart persistence between sessions");
+        
+        ProductsPage productsPage = homePage.searchForProduct(searchTerm);
+        ProductPage productPage = productsPage.selectFirstProduct();
+
+        String productId = productPage.getProductId();
+        double productPrice = productPage.getProductPrice();
+        int quantity = 2;
+        productPage.adjustQuantity(quantity);
+        productPage.addToCart();
+
+        CartPage cartPage = productPage.goToCart();
+
+        Assert.assertTrue(cartPage.hasItems(), "Cart should have items after adding product");
+        Assert.assertTrue(cartPage.containsProduct(productId), "Cart should contain the added product");
+        Assert.assertEquals(cartPage.getProductQuantity(productId), quantity, "Quantity should match");
+        double initialTotal = cartPage.getCartTotal();
+        double expectedTotal = productPrice * quantity;
+        Assert.assertEquals(initialTotal, expectedTotal, 0.01, "Cart total should match price x quantity");
+
+        logger.info("Step 1 completed - Product added to cart: " + productId + ", qty: " + quantity + ", total: " + initialTotal);
+
+        homePage.logout();
+
+        Assert.assertFalse(homePage.isLoggedIn(), "User should be logged out");
+        logger.info("Step 2 completed - User logged out");
+
+        LoginPage loginPage = homePage.goToLoginPage();
+        loginPage.login(testEmail, testPassword);
+        logger.info("Step 3 completed - User logged in again");
+
+        cartPage = homePage.goToCart();
+
+        Assert.assertTrue(cartPage.hasItems(), "Cart should still have items after login");
+        Assert.assertTrue(cartPage.containsProduct(productId), "Cart should contain the same product");
+        Assert.assertEquals(cartPage.getProductQuantity(productId), quantity, "Quantity should persist");
+        double persistedTotal = cartPage.getCartTotal();
+        Assert.assertEquals(persistedTotal, expectedTotal, 0.01, "Cart total should persist");
+
+        logger.info("Step 4 completed - Cart persisted: " + productId + ", qty: " + cartPage.getProductQuantity(productId) + ", total: " + persistedTotal);
+        logger.info("Cart persistence test completed successfully");
     }
 }
