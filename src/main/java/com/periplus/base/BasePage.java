@@ -17,44 +17,31 @@ public abstract class BasePage {
     protected WebDriver driver;
     protected WebDriverWait wait;
     protected final Logger logger = Logger.getLogger(this.getClass().getName());
-    private static final int DEFAULT_TIMEOUT = 10;
 
     public BasePage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(DEFAULT_TIMEOUT));
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(WaitUtility.DEFAULT_TIMEOUT));
         PageFactory.initElements(driver, this);
-        waitForPageReady();
-    }
-
-    private void waitForPageReady() {
-        WaitUtility.waitForPreloaderInvisible(driver);
+        WaitUtility.waitForPageReady(driver);
     }
 
     protected WebElement find(By locator) {
-        waitForPageReady();
-        return new WebDriverWait(driver, Duration.ofSeconds(DEFAULT_TIMEOUT))
-                .until(ExpectedConditions.visibilityOfElementLocated(locator));
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
 
     protected void set(By locator, String text) {
-        waitForPageReady();
         WebElement element = find(locator);
         element.clear();
         element.sendKeys(text);
     }
 
     protected void click(By locator) {
-        waitForPageReady();
-        new WebDriverWait(driver, Duration.ofSeconds(DEFAULT_TIMEOUT))
-                .until(ExpectedConditions.elementToBeClickable(locator))
-                .click();
+        WaitUtility.waitAndClick(driver, locator);
     }
 
     protected void hover(By locator) {
-        waitForPageReady();
         WebElement element = find(locator);
-        Actions actions = new Actions(driver);
-        actions.moveToElement(element).perform();
+        new Actions(driver).moveToElement(element).perform();
     }
 
     protected void waitForElementVisible(By locator) {
@@ -66,18 +53,13 @@ public abstract class BasePage {
     }
 
     protected WebElement findWithin(WebElement parent, By childLocator) {
-        waitForPageReady();
         WebElement child = parent.findElement(childLocator);
-        return new WebDriverWait(driver, Duration.ofSeconds(DEFAULT_TIMEOUT))
-                .until(ExpectedConditions.visibilityOf(child));
+        return wait.until(ExpectedConditions.visibilityOf(child));
     }
 
     protected void clickWithin(WebElement parent, By childLocator) {
-        waitForPageReady();
         WebElement child = parent.findElement(childLocator);
-        new WebDriverWait(driver, Duration.ofSeconds(DEFAULT_TIMEOUT))
-                .until(ExpectedConditions.elementToBeClickable(child))
-                .click();
+        wait.until(ExpectedConditions.elementToBeClickable(child)).click();
     }
 
     protected void setWithin(WebElement parent, By childLocator, String text) {

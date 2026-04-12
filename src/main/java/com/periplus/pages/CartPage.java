@@ -4,8 +4,11 @@ import com.periplus.base.BasePage;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import utilities.ConfigManager;
 import utilities.WaitUtility;
+import java.time.Duration;
 
 import java.util.List;
 
@@ -57,19 +60,15 @@ public class CartPage extends BasePage {
     }
 
     public boolean containsProduct(String productId) {
-        List<WebElement> items = getAllCartItems();
-        for (WebElement item : items) {
-            try {
-                WebElement nameLink = findWithin(item, productNameLink);
-                String href = nameLink.getAttribute("href");
-                if (href != null && href.contains("/p/")) {
-                    String itemProductId = href.replaceAll(".*/p/([0-9]+).*", "$1");
-                    if (itemProductId.equals(productId)) {
-                        return true;
-                    }
+        for (WebElement item : getAllCartItems()) {
+            WebElement nameLink = findWithin(item, productNameLink);
+            String href = nameLink.getAttribute("href");
+            if (href != null && href.contains("/p/")) {
+                String[] parts = href.split("/p/");
+                String itemProductId = parts[parts.length - 1].split("[^0-9]")[0];
+                if (itemProductId.equals(productId)) {
+                    return true;
                 }
-            } catch (Exception e) {
-                continue;
             }
         }
         return false;
@@ -78,36 +77,41 @@ public class CartPage extends BasePage {
     public int getProductQuantity(String productId) {
         List<WebElement> items = getAllCartItems();
         for (WebElement item : items) {
-            try {
-                WebElement nameLink = findWithin(item, productNameLink);
-                String href = nameLink.getAttribute("href");
-                if (href != null && href.contains("/p/")) {
-                    String itemProductId = href.replaceAll(".*/p/([0-9]+).*", "$1");
-                    if (itemProductId.equals(productId)) {
-                        WebElement qtyInput = findWithin(item, quantityInput);
-                        return Integer.parseInt(qtyInput.getAttribute("value"));
-                    }
+            WebElement nameLink = findWithin(item, productNameLink);
+            String href = nameLink.getAttribute("href");
+            if (href != null && href.contains("/p/")) {
+                String itemProductId = href.replaceAll(".*/p/([0-9]+).*", "$1");
+                if (itemProductId.equals(productId)) {
+                    WebElement qtyInput = findWithin(item, quantityInput);
+                    return Integer.parseInt(qtyInput.getAttribute("value"));
                 }
-            } catch (Exception e) {
-                continue;
             }
         }
         return 0;
     }
 
     public void increaseQuantity() {
+        double totalBefore = getCartTotal();
         click(plusButton);
-        WaitUtility.waitForPreloaderInvisible(driver);
-        WaitUtility.waitForElementVisible(driver, cartTotal);
+        waitForTotalToChange(totalBefore);
     }
 
     public void decreaseQuantity() {
+        double totalBefore = getCartTotal();
         click(minusButton);
-        WaitUtility.waitForPreloaderInvisible(driver);
-        WaitUtility.waitForElementVisible(driver, cartTotal);
+        waitForTotalToChange(totalBefore);
         if (isAlertPresent()) {
             acceptAlert();
         }
+    }
+
+    private void waitForTotalToChange(double previousTotal) {
+        WaitUtility.waitForPreloaderInvisible(driver);
+        String previousTotalText = String.valueOf((long) previousTotal);
+        new WebDriverWait(driver, Duration.ofSeconds(WaitUtility.DEFAULT_TIMEOUT))
+                .until(ExpectedConditions.not(
+                        ExpectedConditions.textToBePresentInElementLocated(cartTotal, previousTotalText)
+                ));
     }
 
     public void removeProduct(String productId) {
